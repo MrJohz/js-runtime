@@ -11,4 +11,9 @@ name = "dep-resolver"
 version = "0.1.0"
 dependencies = [
  "config",
+ "mock-filesystem",
 ]
+
+[[package]]
+name = "mock-filesystem"
+version = "0.1.0"

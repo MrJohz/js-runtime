@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 config = { path = "../config" }
+mock-filesystem = { path = "../mock-filesystem" }

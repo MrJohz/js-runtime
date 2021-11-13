@@ -1,23 +1,29 @@
 use std::path::Path;
 
 use config::Dependency;
+use mock_filesystem::Filesystem;
 
 mod errors;
 mod resolvers;
 
-pub fn get_resolver<'a>(
+pub fn get_resolver<'a, FS: Filesystem>(
+    fs: &'a FS,
     package_root: &'a Path,
     dep: &'a Dependency,
 ) -> Result<Box<dyn resolvers::Resolver + 'a>, errors::ResolveFailure> {
     match dep {
-        Dependency::FileDependency { path } => {
-            Ok(Box::new(resolvers::FileResolver::new(package_root, path)))
-        }
+        Dependency::FileDependency { path } => Ok(Box::new(resolvers::FileResolver::new(
+            fs,
+            package_root,
+            path,
+        ))),
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use mock_filesystem::NullFilesystem;
+
     use super::*;
 
     #[test]
@@ -26,14 +32,7 @@ mod tests {
             path: String::from("../other-path"),
         };
 
-        let resolver = get_resolver(&Path::new("."), &dependency);
+        let resolver = get_resolver(&NullFilesystem, &Path::new("."), &dependency);
         assert!(resolver.is_ok(), "resolver was successful");
-        assert_eq!(
-            resolver.unwrap().as_file_resolver(),
-            Some(&resolvers::FileResolver::new(
-                &Path::new("."),
-                "../other-path"
-            ))
-        );
     }
 }

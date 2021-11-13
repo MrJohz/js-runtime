@@ -3,4 +3,5 @@
 members = [
     "dep-resolver",
     "config",
+    "mock-filesystem",
 ]
