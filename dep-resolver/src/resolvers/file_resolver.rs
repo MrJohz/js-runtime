@@ -2,9 +2,9 @@ use manifests::PackageConfig;
 use mock_filesystem::Filesystem;
 
 use crate::errors::ResolveFailure;
+use crate::Resolver;
 
-use super::Resolver;
-use std::{collections::HashMap, path::Path};
+use std::path::Path;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct FileResolver<'a, FS: Filesystem> {
@@ -18,11 +18,7 @@ impl<'a, FS: Filesystem> Resolver for FileResolver<'a, FS> {
         let path = self.fs.canonical(self.package_root, self.dependency_path)?;
         let manifest = self.fs.load_manifest(&path)?;
 
-        Ok(PackageConfig {
-            name: "test".to_string(),
-            version: "0.1.1".to_string(),
-            dependencies: HashMap::new(),
-        })
+        Ok(manifest)
     }
 }
 

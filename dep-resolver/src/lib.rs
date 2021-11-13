@@ -6,6 +6,8 @@ use mock_filesystem::Filesystem;
 mod errors;
 mod resolvers;
 
+use resolvers::Resolver;
+
 pub fn get_resolver<'a, FS: Filesystem>(
     fs: &'a FS,
     package_root: &'a Path,
