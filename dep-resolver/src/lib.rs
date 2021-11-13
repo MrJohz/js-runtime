@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use config::Dependency;
+use manifests::Dependency;
 use mock_filesystem::Filesystem;
 
 mod errors;

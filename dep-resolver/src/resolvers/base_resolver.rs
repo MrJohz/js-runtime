@@ -1,7 +1,7 @@
-use config::PackageConfig;
+use manifests::PackageConfig;
 
 use crate::errors::ResolveFailure;
 
 pub trait Resolver {
-    fn resolve_package_config(&self) -> Result<PackageConfig, ResolveFailure>;
+    fn resolve_manifest(&self) -> Result<PackageConfig, ResolveFailure>;
 }

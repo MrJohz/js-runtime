@@ -1,6 +1,6 @@
 mod filesystem_trait;
 
-mod mock_filesystem;
+pub mod mock_filesystem;
 mod null_filesystem;
 mod real_filesystem;
 

@@ -11,4 +11,11 @@ impl Filesystem for RealFilesystem {
     ) -> Result<std::path::PathBuf, Error> {
         canonicalize(path.as_ref().join(other_path))
     }
+
+    fn load_manifest(
+        &self,
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<manifests::PackageConfig, Error> {
+        todo!()
+    }
 }

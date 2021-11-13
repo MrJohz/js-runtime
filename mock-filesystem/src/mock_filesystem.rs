@@ -6,11 +6,13 @@ use std::{
 
 use super::Filesystem;
 
+#[derive(Debug)]
 pub enum FileTree {
     File(String),
     Directory(HashMap<PathBuf, FileTree>),
 }
 
+#[derive(Debug)]
 pub struct MockFilesystem {
     cwd: PathBuf,
     file_tree: HashMap<PathBuf, FileTree>,
@@ -76,12 +78,44 @@ impl Filesystem for MockFilesystem {
 
         Ok(new)
     }
+
+    fn load_manifest(
+        &self,
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<manifests::PackageConfig, Error> {
+        todo!()
+    }
 }
 
 #[macro_export]
 macro_rules! mock_fs {
-    ($path:literal => {}) => {{
-        let hm = ::std::collections::HashMap::new();
-        hm
+    (
+        $($path:literal => $child:tt)*
+    ) => {{
+        let mut hm = ::std::collections::HashMap::new();
+        $(
+            hm.insert(
+                ::std::path::PathBuf::from($path),
+                ::mock_filesystem::mock_fs! { @child $child },
+            );
+        )*
+
+        ::mock_filesystem::MockFilesystem::from_tree(hm)
     }};
+    (@child {
+        $($path:literal => $child:tt)*
+    }) => {{
+        let mut hm = ::std::collections::HashMap::new();
+        $(
+            hm.insert(
+                ::std::path::PathBuf::from($path),
+                ::mock_filesystem::mock_fs! { @child $child },
+            );
+        )*
+
+        ::mock_filesystem::mock_filesystem::FileTree::Directory(hm)
+    }};
+    (@child $child:literal) => {
+        ::mock_filesystem::mock_filesystem::FileTree::File(String::from($child))
+    };
 }

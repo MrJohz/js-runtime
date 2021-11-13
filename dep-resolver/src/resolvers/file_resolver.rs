@@ -1,4 +1,4 @@
-use config::PackageConfig;
+use manifests::PackageConfig;
 use mock_filesystem::Filesystem;
 
 use crate::errors::ResolveFailure;
@@ -14,9 +14,9 @@ pub struct FileResolver<'a, FS: Filesystem> {
 }
 
 impl<'a, FS: Filesystem> Resolver for FileResolver<'a, FS> {
-    fn resolve_package_config(&self) -> Result<PackageConfig, ResolveFailure> {
+    fn resolve_manifest(&self) -> Result<PackageConfig, ResolveFailure> {
         let path = self.fs.canonical(self.package_root, self.dependency_path)?;
-        dbg!(path);
+        let manifest = self.fs.load_manifest(&path)?;
 
         Ok(PackageConfig {
             name: "test".to_string(),
@@ -43,22 +43,35 @@ impl<'a, FS: Filesystem> FileResolver<'a, FS> {
 mod tests {
     use std::path::PathBuf;
 
-    use mock_filesystem::MockFilesystem;
-
     use super::*;
 
     #[test]
-    pub fn resolves_to_error_if_package_does_not_exist() {
+    fn resolves_to_error_if_package_dir_does_not_exist() {
         let fs = mock_filesystem::mock_fs!(
-            "path/to/x" => {
-            }
+            "projects" => { "project-a" => {} }
         );
-        let fs = MockFilesystem::from_tree(fs);
-        let package_root = PathBuf::from("/tmp/other");
+        let package_root = PathBuf::from("/projects/projects-a");
         let resolver = FileResolver::new(&fs, &package_root, "dependency_path");
 
         assert!(
-            resolver.resolve_package_config().is_err(),
+            resolver.resolve_manifest().is_err(),
+            "Should fail to resolve"
+        )
+    }
+
+    #[test]
+    fn resolves_to_error_if_package_file_does_not_exist() {
+        let fs = mock_filesystem::mock_fs!(
+            "projects" => {
+                "project-a" => {}
+                "project-b" => {}
+            }
+        );
+        let package_root = PathBuf::from("/projects/projects-a");
+        let resolver = FileResolver::new(&fs, &package_root, "../project-b");
+
+        assert!(
+            resolver.resolve_manifest().is_err(),
             "Should fail to resolve"
         )
     }

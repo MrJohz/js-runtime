@@ -3,17 +3,20 @@
 version = 3
 
 [[package]]
-name = "config"
-version = "0.1.0"
-
-[[package]]
 name = "dep-resolver"
 version = "0.1.0"
 dependencies = [
- "config",
+ "manifests",
  "mock-filesystem",
 ]
 
 [[package]]
+name = "manifests"
+version = "0.1.0"
+
+[[package]]
 name = "mock-filesystem"
 version = "0.1.0"
+dependencies = [
+ "manifests",
+]
