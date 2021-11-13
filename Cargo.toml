@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "dep-resolver",
+    "config",
+]
