@@ -8,6 +8,7 @@ pub struct FileResolver<'a> {
 }
 
 impl<'a> Resolver for FileResolver<'a> {
+    #[cfg(test)]
     fn as_file_resolver<'b>(&'b self) -> Option<&'b FileResolver<'b>> {
         Some(self)
     }
