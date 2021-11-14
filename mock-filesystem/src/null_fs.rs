@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use super::Filesystem;
+use crate::{Filesystem, MFile};
 
 pub struct NullFilesystem;
 impl Filesystem for NullFilesystem {
@@ -12,7 +12,7 @@ impl Filesystem for NullFilesystem {
         panic!("Using the null filesystem in any way will produce an error.")
     }
 
-    fn load_manifest(&self, _: impl AsRef<Path>) -> Result<manifests::PackageConfig, Error> {
+    fn load_file(&self, _: impl AsRef<Path>) -> Result<MFile, Error> {
         panic!("Using the null filesystem in any way will produce an error.")
     }
 }

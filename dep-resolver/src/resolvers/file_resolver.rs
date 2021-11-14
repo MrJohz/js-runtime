@@ -1,9 +1,10 @@
-use manifests::PackageConfig;
+use manifests::ConfigFile;
 use mock_filesystem::Filesystem;
 
 use crate::errors::ResolveFailure;
 use crate::Resolver;
 
+use std::io::Read;
 use std::path::Path;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -14,9 +15,14 @@ pub struct FileResolver<'a, FS: Filesystem> {
 }
 
 impl<'a, FS: Filesystem> Resolver for FileResolver<'a, FS> {
-    fn resolve_manifest(&self) -> Result<PackageConfig, ResolveFailure> {
+    fn resolve_manifest(&self) -> Result<ConfigFile, ResolveFailure> {
         let path = self.fs.canonical(self.package_root, self.dependency_path)?;
-        let manifest = self.fs.load_manifest(&path)?;
+        let mut manifest_file = self.fs.load_file(&path.join("knopf.toml"))?;
+
+        let mut buffer = Vec::new();
+        manifest_file.read_to_end(&mut buffer)?;
+
+        let manifest = toml::from_slice(&buffer)?;
 
         Ok(manifest)
     }
@@ -37,17 +43,19 @@ impl<'a, FS: Filesystem> FileResolver<'a, FS> {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
+    use std::{collections::HashMap, path::PathBuf};
+
+    use manifests::PackageConfig;
 
     use super::*;
 
     #[test]
     fn resolves_to_error_if_package_dir_does_not_exist() {
-        let fs = mock_filesystem::mock_fs!(
+        let fs = mock_filesystem::mock_tree!(
             "projects" => { "project-a" => {} }
         );
         let package_root = PathBuf::from("/projects/projects-a");
-        let resolver = FileResolver::new(&fs, &package_root, "dependency_path");
+        let resolver = FileResolver::new(&fs, &package_root, "../project-b");
 
         assert!(
             resolver.resolve_manifest().is_err(),
@@ -56,8 +64,8 @@ mod tests {
     }
 
     #[test]
-    fn resolves_to_error_if_package_file_does_not_exist() {
-        let fs = mock_filesystem::mock_fs!(
+    fn resolves_to_error_if_manifest_file_does_not_exist() {
+        let fs = mock_filesystem::mock_tree!(
             "projects" => {
                 "project-a" => {}
                 "project-b" => {}
@@ -69,6 +77,33 @@ mod tests {
         assert!(
             resolver.resolve_manifest().is_err(),
             "Should fail to resolve"
+        )
+    }
+
+    #[test]
+    fn resolves_to_relative_manifest_file() {
+        let manifest_file = include_str!("../../data/simple-manifest.toml");
+        let fs = mock_filesystem::mock_tree!(
+            "projects" => {
+                "project-a" => {}
+                "project-b" => {
+                    "knopf.toml" => manifest_file
+                }
+            }
+        );
+
+        let package_root = PathBuf::from("/projects/projects-a");
+        let resolver = FileResolver::new(&fs, &package_root, "../project-b");
+
+        assert_eq!(
+            resolver.resolve_manifest().unwrap(),
+            ConfigFile {
+                knopf: PackageConfig {
+                    name: "test-project".into(),
+                    version: "0.0.0".into(),
+                    dependencies: HashMap::new()
+                }
+            }
         )
     }
 }

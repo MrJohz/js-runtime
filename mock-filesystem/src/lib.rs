@@ -1,10 +1,13 @@
 mod filesystem_trait;
 
-pub mod mock_filesystem;
-mod null_filesystem;
-mod real_filesystem;
+pub mod mock_fs;
+mod null_fs;
+mod real_fs;
 
 pub use filesystem_trait::Filesystem;
-pub use mock_filesystem::MockFilesystem;
-pub use null_filesystem::NullFilesystem;
-pub use real_filesystem::RealFilesystem;
+pub use filesystem_trait::MFile;
+pub use mock_fs::MockFilesystem;
+pub use null_fs::NullFilesystem;
+pub use real_fs::RealFilesystem;
+
+pub use mock_filesystem_macros::mock_tree;

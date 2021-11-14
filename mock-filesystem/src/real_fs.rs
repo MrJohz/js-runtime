@@ -1,6 +1,6 @@
 use std::{fs::canonicalize, io::Error};
 
-use super::Filesystem;
+use crate::{Filesystem, MFile};
 
 pub struct RealFilesystem {}
 impl Filesystem for RealFilesystem {
@@ -12,10 +12,7 @@ impl Filesystem for RealFilesystem {
         canonicalize(path.as_ref().join(other_path))
     }
 
-    fn load_manifest(
-        &self,
-        path: impl AsRef<std::path::Path>,
-    ) -> Result<manifests::PackageConfig, Error> {
+    fn load_file(&self, _: impl AsRef<std::path::Path>) -> Result<MFile, Error> {
         todo!()
     }
 }

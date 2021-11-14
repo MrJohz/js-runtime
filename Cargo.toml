@@ -4,4 +4,5 @@ members = [
     "dep-resolver",
     "manifests",
     "mock-filesystem",
+    "mock-filesystem-macros",
 ]
