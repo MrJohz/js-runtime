@@ -19,6 +19,7 @@ pub fn get_resolver<'a, FS: Filesystem>(
             package_root,
             path,
         ))),
+        Dependency::GitDependency { git: _ } => Ok(Box::new(resolvers::GitResolver)),
     }
 }
 
@@ -36,5 +37,21 @@ mod tests {
 
         let resolver = get_resolver(&NullFilesystem, &Path::new("."), &dependency);
         assert!(resolver.is_ok(), "resolver was successful");
+
+        let resolver = resolver.unwrap();
+        assert_eq!(resolver.name(), "file-resolver");
+    }
+
+    #[test]
+    fn git_dependency_produces_git_resolver() {
+        let dependency = Dependency::GitDependency {
+            git: String::from("git@github.com:user/package.git"),
+        };
+
+        let resolver = get_resolver(&NullFilesystem, &Path::new("."), &dependency);
+        assert!(resolver.is_ok(), "resolver was successful");
+
+        let resolver = resolver.unwrap();
+        assert_eq!(resolver.name(), "git-resolver");
     }
 }

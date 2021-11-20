@@ -15,6 +15,10 @@ pub struct FileResolver<'a, FS: Filesystem> {
 }
 
 impl<'a, FS: Filesystem> Resolver for FileResolver<'a, FS> {
+    fn name(&self) -> &str {
+        "file-resolver"
+    }
+
     fn resolve_manifest(&self) -> Result<ConfigFile, ResolveFailure> {
         let path = self.fs.canonical(self.package_root, self.dependency_path)?;
         let mut manifest_file = self.fs.load_file(&path.join("knopf.toml"))?;

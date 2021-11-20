@@ -5,6 +5,7 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize, PartialEq, Eq)]
 pub enum Dependency {
     FileDependency { path: String },
+    GitDependency { git: String },
 }
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]

@@ -11,6 +11,11 @@ use crate::errors::ResolveFailure;
 /// need the package manifest file (`resolve_manifest`) and a way to install the package in
 /// the correct place (`install_package`).
 pub trait Resolver {
+    /// Returns the resolver name/type/id/whatever
+    ///
+    /// Useful for tests/debugging
+    fn name(&self) -> &str;
+
     /// Resolve the manifest for a given package.
     fn resolve_manifest(&self) -> Result<ConfigFile, ResolveFailure>;
 
