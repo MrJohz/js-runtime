@@ -1,7 +1,0 @@
-[package]
-name = "mock-filesystem"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-mock-filesystem-macros = { path = "../mock-filesystem-macros" }

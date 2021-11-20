@@ -5,5 +5,5 @@ edition = "2021"
 
 [dependencies]
 manifests = { path = "../manifests" }
-mock-filesystem = { path = "../mock-filesystem" }
+environment = { path = "../environment" }
 toml = "0.5.8"

@@ -6,10 +6,14 @@ version = 3
 name = "dep-resolver"
 version = "0.1.0"
 dependencies = [
+ "environment",
  "manifests",
- "mock-filesystem",
  "toml",
 ]
+
+[[package]]
+name = "environment"
+version = "0.1.0"
 
 [[package]]
 name = "manifests"
@@ -17,17 +21,6 @@ version = "0.1.0"
 dependencies = [
  "serde",
 ]
-
-[[package]]
-name = "mock-filesystem"
-version = "0.1.0"
-dependencies = [
- "mock-filesystem-macros",
-]
-
-[[package]]
-name = "mock-filesystem-macros"
-version = "0.1.0"
 
 [[package]]
 name = "proc-macro2"

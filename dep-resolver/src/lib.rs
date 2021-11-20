@@ -1,21 +1,21 @@
 use std::path::Path;
 
+use environment::Environment;
 use manifests::Dependency;
-use mock_filesystem::Filesystem;
 
 mod errors;
 mod resolvers;
 
 use resolvers::Resolver;
 
-pub fn get_resolver<'a, FS: Filesystem>(
-    fs: &'a FS,
+pub fn get_resolver<'a, Env: Environment>(
+    env: &'a Env,
     package_root: &'a Path,
     dep: &'a Dependency,
 ) -> Result<Box<dyn resolvers::Resolver + 'a>, errors::ResolveFailure> {
     match dep {
         Dependency::FileDependency { path } => Ok(Box::new(resolvers::FileResolver::new(
-            fs,
+            env,
             package_root,
             path,
         ))),
@@ -25,7 +25,7 @@ pub fn get_resolver<'a, FS: Filesystem>(
 
 #[cfg(test)]
 mod tests {
-    use mock_filesystem::NullFilesystem;
+    use environment::NullEnvironment;
 
     use super::*;
 
@@ -35,7 +35,7 @@ mod tests {
             path: String::from("../other-path"),
         };
 
-        let resolver = get_resolver(&NullFilesystem, &Path::new("."), &dependency);
+        let resolver = get_resolver(&NullEnvironment, &Path::new("."), &dependency);
         assert!(resolver.is_ok(), "resolver was successful");
 
         let resolver = resolver.unwrap();
@@ -48,7 +48,7 @@ mod tests {
             git: String::from("git@github.com:user/package.git"),
         };
 
-        let resolver = get_resolver(&NullFilesystem, &Path::new("."), &dependency);
+        let resolver = get_resolver(&NullEnvironment, &Path::new("."), &dependency);
         assert!(resolver.is_ok(), "resolver was successful");
 
         let resolver = resolver.unwrap();
