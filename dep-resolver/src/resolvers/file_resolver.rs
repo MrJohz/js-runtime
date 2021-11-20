@@ -5,13 +5,12 @@ use crate::errors::ResolveFailure;
 use crate::Resolver;
 
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct FileResolver<'a, Env: Environment> {
     env: &'a Env,
-    package_root: &'a Path,
-    dependency_path: &'a str,
+    dependency_path: PathBuf,
 }
 
 impl<'a, Env: Environment> Resolver for FileResolver<'a, Env> {
@@ -20,10 +19,9 @@ impl<'a, Env: Environment> Resolver for FileResolver<'a, Env> {
     }
 
     fn resolve_manifest(&self) -> Result<ConfigFile, ResolveFailure> {
-        let path = self
+        let mut manifest_file = self
             .env
-            .path_from_base(self.package_root, self.dependency_path.as_ref())?;
-        let mut manifest_file = self.env.load_file(&path.join("knopf.toml"))?;
+            .load_file(&self.dependency_path.join("knopf.toml"))?;
 
         let mut buffer = Vec::new();
         manifest_file.read_to_end(&mut buffer)?;
@@ -34,24 +32,24 @@ impl<'a, Env: Environment> Resolver for FileResolver<'a, Env> {
     }
 
     fn install_package(&self, target: &Path) -> Result<(), ResolveFailure> {
-        let source_dir = self
-            .env
-            .path_from_base(self.package_root, self.dependency_path.as_ref())?;
-        self.env.copy_directory(&source_dir, target)?;
+        self.env.copy_directory(&self.dependency_path, target)?;
         Ok(())
     }
 }
 
 impl<'a, Env: Environment> FileResolver<'a, Env> {
-    pub(crate) fn new(env: &'a Env, package_root: &'a Path, dependency_path: &'a str) -> Self
+    pub(crate) fn new(
+        env: &'a Env,
+        package_root: &'a Path,
+        dependency_path: &'a str,
+    ) -> Result<Self, ResolveFailure>
     where
         Env: Environment,
     {
-        Self {
+        Ok(Self {
             env,
-            package_root,
-            dependency_path,
-        }
+            dependency_path: env.path_from_base(package_root, dependency_path.as_ref())?,
+        })
     }
 }
 
@@ -78,10 +76,7 @@ mod tests {
         let package_root = PathBuf::from("/projects/project-a");
         let resolver = FileResolver::new(&env, &package_root, "../project-b");
 
-        assert!(
-            resolver.resolve_manifest().is_err(),
-            "Should fail to resolve"
-        )
+        assert!(resolver.is_err(), "Should fail to resolve")
     }
 
     #[test]
@@ -94,7 +89,7 @@ mod tests {
             .with(predicate::eq("/projects/project-b/knopf.toml".as_ref()))
             .returning(|_| Err(std::io::Error::from(std::io::ErrorKind::NotFound)));
 
-        let resolver = FileResolver::new(&env, &package_root, "../project-b");
+        let resolver = FileResolver::new(&env, &package_root, "../project-b").unwrap();
 
         assert!(
             resolver.resolve_manifest().is_err(),
@@ -110,7 +105,7 @@ mod tests {
             .returning(|_, _| Ok(PathBuf::from("/projects/project-b")));
         env.expect_load_file()
             .returning(|_| File::open("data/simple-manifest.toml"));
-        let resolver = FileResolver::new(&env, &package_root, "../project-b");
+        let resolver = FileResolver::new(&env, &package_root, "../project-b").unwrap();
 
         assert_eq!(
             resolver.resolve_manifest().unwrap(),
@@ -136,7 +131,7 @@ mod tests {
                 predicate::eq("/lib/package-id".as_ref()),
             )
             .returning(|_, _| Ok(()));
-        let resolver = FileResolver::new(&env, &package_root, "/projects/project-b");
+        let resolver = FileResolver::new(&env, &package_root, "/projects/project-b").unwrap();
 
         assert_eq!(
             resolver

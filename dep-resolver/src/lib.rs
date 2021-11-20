@@ -18,24 +18,32 @@ pub fn get_resolver<'a, Env: Environment>(
             env,
             package_root,
             path,
-        ))),
-        Dependency::GitDependency { git: _ } => Ok(Box::new(resolvers::GitResolver)),
+        )?)),
+        Dependency::GitDependency { git: git_url } => {
+            Ok(Box::new(resolvers::GitResolver::new(env, git_url)))
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use environment::NullEnvironment;
+    use std::path::PathBuf;
+
+    use environment::{MockEnvironment, NullEnvironment};
 
     use super::*;
 
     #[test]
     fn test_file_dependency_produces_file_resolver() {
+        let mut env = MockEnvironment::new();
+        env.expect_path_from_base()
+            .returning(|_, _| Ok(PathBuf::from("/resolved")));
+
         let dependency = Dependency::FileDependency {
             path: String::from("../other-path"),
         };
 
-        let resolver = get_resolver(&NullEnvironment, &Path::new("."), &dependency);
+        let resolver = get_resolver(&env, &Path::new("."), &dependency);
         assert!(resolver.is_ok(), "resolver was successful");
 
         let resolver = resolver.unwrap();
