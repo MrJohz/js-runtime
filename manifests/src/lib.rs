@@ -1,3 +1,5 @@
+mod errors;
+
 use std::collections::HashMap;
 
 use serde::Deserialize;
@@ -19,4 +21,9 @@ pub struct PackageConfig {
 #[derive(Debug, Deserialize, PartialEq, Eq)]
 pub struct ConfigFile {
     pub knopf: PackageConfig,
+}
+
+pub fn parse_manifest(contents: &str) -> Result<PackageConfig, errors::ManifestError> {
+    let manifest = toml::from_str::<ConfigFile>(contents)?;
+    Ok(manifest.knopf)
 }
