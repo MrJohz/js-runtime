@@ -7,3 +7,6 @@ edition = "2021"
 manifests = { path = "../manifests" }
 environment = { path = "../environment" }
 toml = "0.5.8"
+
+[dev-dependencies]
+mockall = "0.10.2"

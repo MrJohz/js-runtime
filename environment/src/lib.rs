@@ -8,16 +8,9 @@ mod null_env;
 
 pub use null_env::NullEnvironment;
 
+#[mockall::automock]
 pub trait Environment {
-    fn path_from_base(
-        &self,
-        base: impl AsRef<Path>,
-        path: impl AsRef<Path>,
-    ) -> Result<PathBuf, IoError>;
-    fn load_file(&self, path: impl AsRef<Path>) -> Result<File, IoError>;
-    fn copy_directory(
-        &self,
-        source: impl AsRef<Path>,
-        target: impl AsRef<Path>,
-    ) -> Result<(), IoError>;
+    fn path_from_base(&self, base: &Path, path: &Path) -> Result<PathBuf, IoError>;
+    fn load_file(&self, path: &Path) -> Result<File, IoError>;
+    fn copy_directory(&self, source: &Path, target: &Path) -> Result<(), IoError>;
 }
