@@ -15,8 +15,8 @@ pub struct Install {}
 /// Knopf -- A JavaScript Runtime
 pub struct Cli {
     /// path to package manifest
-    #[structopt(short = "p", default_value = "\".\".into()")]
-    package: PathBuf,
+    #[structopt(short = "p", default_value = ".")]
+    pub package: PathBuf,
 
     #[structopt(subcommand)]
     pub command: Option<Commands>,
