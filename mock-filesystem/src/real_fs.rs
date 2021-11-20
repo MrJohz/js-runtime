@@ -15,4 +15,12 @@ impl Filesystem for RealFilesystem {
     fn load_file(&self, _: impl AsRef<std::path::Path>) -> Result<MFile, Error> {
         todo!()
     }
+
+    fn copy_directory(
+        &self,
+        _: impl AsRef<std::path::Path>,
+        _: impl AsRef<std::path::Path>,
+    ) -> Result<(), Error> {
+        todo!()
+    }
 }

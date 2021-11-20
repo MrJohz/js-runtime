@@ -15,4 +15,8 @@ impl Filesystem for NullFilesystem {
     fn load_file(&self, _: impl AsRef<Path>) -> Result<MFile, Error> {
         panic!("Using the null filesystem in any way will produce an error.")
     }
+
+    fn copy_directory(&self, _: impl AsRef<Path>, _: impl AsRef<Path>) -> Result<(), Error> {
+        panic!("Using the null filesystem in any way will produce an error.")
+    }
 }

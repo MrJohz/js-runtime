@@ -1,28 +1,29 @@
 use std::{
+    cell::RefCell,
     collections::HashMap,
     io::{Error, ErrorKind},
-    path::{Path, PathBuf},
+    path::{Component, Path, PathBuf},
 };
 
 use crate::{Filesystem, MFile};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FileTree {
     File(String),
     Directory(HashMap<PathBuf, FileTree>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct MockFilesystem {
     cwd: PathBuf,
-    file_tree: FileTree,
+    file_tree: RefCell<FileTree>,
 }
 
 impl MockFilesystem {
     pub fn from_tree(file_tree: HashMap<PathBuf, FileTree>) -> Self {
         Self {
             cwd: PathBuf::from("/"),
-            file_tree: FileTree::Directory(file_tree),
+            file_tree: RefCell::new(FileTree::Directory(file_tree)),
         }
     }
     pub fn with_cwd(self, cwd: PathBuf) -> Self {
@@ -32,14 +33,42 @@ impl MockFilesystem {
             file_tree: self.file_tree,
         }
     }
+
+    fn get_filetree(&self, path: &Path) -> Result<FileTree, Error> {
+        let root = &*self.file_tree.borrow();
+        let mut current = root;
+        for path in [&self.cwd, path] {
+            for component in path.components() {
+                match component {
+                    Component::Prefix(_) => todo!(),
+                    Component::RootDir => current = root,
+                    Component::CurDir => {}
+                    Component::ParentDir => todo!(),
+                    Component::Normal(path) => match current {
+                        FileTree::File(_) => return Err(Error::from(ErrorKind::NotFound)),
+                        FileTree::Directory(dir) => {
+                            let path: &Path = path.as_ref();
+                            if let Some(ft) = dir.get(path) {
+                                current = ft;
+                            } else {
+                                return Err(Error::from(ErrorKind::NotFound));
+                            }
+                        }
+                    },
+                }
+            }
+        }
+
+        Ok(current.clone())
+    }
 }
 
 impl Filesystem for MockFilesystem {
     fn canonical(
         &self,
-        path: impl AsRef<std::path::Path>,
-        other_path: impl AsRef<std::path::Path>,
-    ) -> Result<std::path::PathBuf, Error> {
+        path: impl AsRef<Path>,
+        other_path: impl AsRef<Path>,
+    ) -> Result<PathBuf, Error> {
         let path = path.as_ref();
         let other_path = other_path.as_ref();
 
@@ -47,19 +76,19 @@ impl Filesystem for MockFilesystem {
         for part in [&self.cwd, path, other_path] {
             for component in part.components() {
                 match component {
-                    std::path::Component::Prefix(_) => todo!(),
-                    std::path::Component::RootDir => created.clear(),
-                    std::path::Component::CurDir => {}
-                    std::path::Component::ParentDir => {
-                        created.pop();
+                    Component::Prefix(_) => todo!(),
+                    Component::RootDir => created.clear(),
+                    Component::CurDir => {}
+                    Component::ParentDir => {
+                        created.pop().unwrap();
                     }
-                    std::path::Component::Normal(str) => created.push(PathBuf::from(str)),
+                    Component::Normal(str) => created.push(PathBuf::from(str)),
                 }
             }
         }
 
         let mut new = PathBuf::from("/");
-        let mut cwd = &self.file_tree;
+        let mut cwd = &*self.file_tree.borrow();
         for cpt in created {
             match cwd {
                 FileTree::File(_) => return Err(Error::from(ErrorKind::NotFound)),
@@ -77,35 +106,31 @@ impl Filesystem for MockFilesystem {
         Ok(new)
     }
 
-    fn load_file(&self, path: impl AsRef<std::path::Path>) -> Result<MFile, Error> {
-        let mut root = &self.file_tree;
-        for path in [&self.cwd, path.as_ref()] {
-            for component in path.components() {
-                match component {
-                    std::path::Component::Prefix(_) => todo!(),
-                    std::path::Component::RootDir => root = &self.file_tree,
-                    std::path::Component::CurDir => {}
-                    std::path::Component::ParentDir => todo!(),
-                    std::path::Component::Normal(path) => match root {
-                        FileTree::File(_) => return Err(Error::from(ErrorKind::NotFound)),
-                        FileTree::Directory(dir) => {
-                            let path: &Path = path.as_ref();
-                            if let Some(ft) = dbg!(dir.get(path)) {
-                                root = ft;
-                            } else {
-                                return Err(Error::from(ErrorKind::NotFound));
-                            }
-                        }
-                    },
-                }
-            }
-        }
-
-        dbg!(root);
-
-        match root {
+    fn load_file(&self, path: impl AsRef<Path>) -> Result<MFile, Error> {
+        match dbg!(self.get_filetree(path.as_ref())?) {
             FileTree::File(text) => Ok(MFile::from(text.clone())),
             FileTree::Directory(_) => Err(Error::from(ErrorKind::NotFound)),
         }
+    }
+
+    fn copy_directory(
+        &self,
+        source_path: impl AsRef<Path>,
+        target_path: impl AsRef<Path>,
+    ) -> Result<(), Error> {
+        let target_path = target_path.as_ref();
+        let target_dir_path = target_path.parent().unwrap();
+        let target_name = target_path.file_name().unwrap();
+        let source_dir = self.get_filetree(source_path.as_ref())?;
+        let target_dir = self.get_filetree(target_dir_path)?;
+
+        let source_dir = source_dir.clone();
+
+        match target_dir {
+            FileTree::File(_) => return Err(Error::from(ErrorKind::NotFound)),
+            FileTree::Directory(mut map) => map.insert(PathBuf::from(target_name), source_dir),
+        };
+
+        Ok(())
     }
 }

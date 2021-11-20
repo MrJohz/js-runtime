@@ -50,4 +50,10 @@ pub trait Filesystem {
     ) -> Result<PathBuf, Error>;
 
     fn load_file(&self, path: impl AsRef<Path>) -> Result<MFile, Error>;
+
+    fn copy_directory(
+        &self,
+        source: impl AsRef<Path>,
+        target: impl AsRef<Path>,
+    ) -> Result<(), Error>;
 }

@@ -26,6 +26,12 @@ impl<'a, FS: Filesystem> Resolver for FileResolver<'a, FS> {
 
         Ok(manifest)
     }
+
+    fn install_package(&self, target: &Path) -> Result<(), ResolveFailure> {
+        let source_dir = self.fs.canonical(self.package_root, self.dependency_path)?;
+        self.fs.copy_directory(source_dir, target)?;
+        Ok(())
+    }
 }
 
 impl<'a, FS: Filesystem> FileResolver<'a, FS> {
@@ -101,9 +107,68 @@ mod tests {
                 knopf: PackageConfig {
                     name: "test-project".into(),
                     version: "0.0.0".into(),
-                    dependencies: HashMap::new()
+                    dependencies: HashMap::new(),
                 }
             }
         )
+    }
+
+    #[test]
+    fn resolves_to_absolute_manifest_file() {
+        let manifest_file = include_str!("../../data/simple-manifest.toml");
+        let fs = mock_filesystem::mock_tree!(
+            "projects" => {
+                "project-a" => {}
+                "project-b" => {
+                    "knopf.toml" => manifest_file
+                }
+            }
+        );
+
+        let package_root = PathBuf::from("/projects/projects-a");
+        let resolver = FileResolver::new(&fs, &package_root, "/projects/project-b");
+
+        assert_eq!(
+            resolver.resolve_manifest().unwrap(),
+            ConfigFile {
+                knopf: PackageConfig {
+                    name: "test-project".into(),
+                    version: "0.0.0".into(),
+                    dependencies: HashMap::new(),
+                }
+            }
+        )
+    }
+
+    #[test]
+    fn installs_package_to_target_directory() {
+        let fs = mock_filesystem::mock_tree!(
+            "projects" => {
+                "project-a" => {}
+                "project-b" => { "testfile.txt" => "ok" }
+            }
+            "lib" => {}
+        );
+
+        let package_root = PathBuf::from("/projects/projects-a");
+        let resolver = FileResolver::new(&fs, &package_root, "/projects/project-b");
+
+        assert_eq!(
+            resolver
+                .install_package("/lib/package-id".as_ref())
+                .unwrap(),
+            ()
+        );
+
+        assert_eq!(
+            fs,
+            mock_filesystem::mock_tree!(
+                "projects" => {
+                    "project-a" => {}
+                    "project-b" => { "testfile.txt" => "ok" }
+                }
+                "lib" => {}
+            )
+        );
     }
 }
