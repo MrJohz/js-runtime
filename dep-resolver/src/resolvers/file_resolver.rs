@@ -23,7 +23,7 @@ impl<'a, Env: Environment> Resolver for FileResolver<'a, Env> {
             .read_file(&self.dependency_path.join("knopf.toml"))?;
 
         let manifest =
-            PackageConfig::from_file_contents(self.dependency_path.clone().into(), &manifest_data)?;
+            PackageConfig::from_file_contents(self.dependency_path.clone(), &manifest_data)?;
 
         Ok(manifest)
     }
