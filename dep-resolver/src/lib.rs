@@ -6,7 +6,7 @@ use manifests::Dependency;
 mod errors;
 mod resolvers;
 
-use resolvers::Resolver;
+pub use resolvers::Resolver;
 
 pub fn get_resolver<'a, Env: Environment>(
     env: &'a Env,

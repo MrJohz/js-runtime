@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+dep-resolver = { path = "../dep-resolver" }
+environment = { path = "../environment" }
 manifests = { path = "../manifests" }
 structopt = "0.3.25"
-
-[features]

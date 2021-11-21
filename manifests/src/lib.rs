@@ -1,29 +1,35 @@
+use std::path::{Path, PathBuf};
+
+pub use errors::ManifestError as Error;
+pub use parsing::{ConfigFile, Dependency, KnopfSection};
+
 mod errors;
+mod parsing;
 
-use std::collections::HashMap;
-
-use serde::Deserialize;
-
-#[derive(Debug, Deserialize, PartialEq, Eq)]
-pub enum Dependency {
-    FileDependency { path: String },
-    GitDependency { git: String },
-}
-
-#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct PackageConfig {
-    pub name: String,
-    pub version: String, // TODO: should this be a cleverer type?
-
-    pub dependencies: HashMap<String, Dependency>,
+    manifest: ConfigFile,
+    location: PathBuf,
 }
 
-#[derive(Debug, Deserialize, PartialEq, Eq)]
-pub struct ConfigFile {
-    pub knopf: PackageConfig,
-}
+impl PackageConfig {
+    pub fn location(&self) -> &Path {
+        &self.location
+    }
 
-pub fn parse_manifest(contents: &str) -> Result<PackageConfig, errors::ManifestError> {
-    let manifest = toml::from_str::<ConfigFile>(contents)?;
-    Ok(manifest.knopf)
+    pub fn dependencies(&self) -> impl Iterator<Item = &Dependency> {
+        self.manifest.knopf.dependencies.values()
+    }
+
+    pub fn from_manifest(location: PathBuf, manifest: ConfigFile) -> Self {
+        Self { manifest, location }
+    }
+
+    pub fn from_file_contents(
+        location: PathBuf,
+        contents: &[u8],
+    ) -> Result<Self, errors::ManifestError> {
+        let manifest = toml::from_slice(contents)?;
+        Ok(Self { manifest, location })
+    }
 }

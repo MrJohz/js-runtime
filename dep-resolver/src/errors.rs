@@ -1,7 +1,7 @@
 #[derive(Debug)]
 pub enum ResolveFailure {
     IoError(std::io::Error),
-    ManifestParseError(toml::de::Error),
+    ManifestParseError(manifests::Error),
 }
 
 impl From<std::io::Error> for ResolveFailure {
@@ -10,8 +10,8 @@ impl From<std::io::Error> for ResolveFailure {
     }
 }
 
-impl From<toml::de::Error> for ResolveFailure {
-    fn from(error: toml::de::Error) -> Self {
+impl From<manifests::Error> for ResolveFailure {
+    fn from(error: manifests::Error) -> Self {
         Self::ManifestParseError(error)
     }
 }

@@ -2,6 +2,7 @@ use environment::Environment;
 
 use crate::Resolver;
 
+#[derive(Debug, PartialEq, Eq)]
 pub struct GitResolver<'a, Env: Environment> {
     _env: &'a Env,
     _url: &'a str,
@@ -21,7 +22,7 @@ impl<'a, Env: Environment> Resolver for GitResolver<'a, Env> {
         "git-resolver"
     }
 
-    fn resolve_manifest(&self) -> Result<manifests::ConfigFile, crate::errors::ResolveFailure> {
+    fn resolve_manifest(&self) -> Result<manifests::PackageConfig, crate::errors::ResolveFailure> {
         todo!()
     }
 

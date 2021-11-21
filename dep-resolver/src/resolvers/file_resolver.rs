@@ -1,10 +1,9 @@
 use environment::Environment;
-use manifests::ConfigFile;
+use manifests::PackageConfig;
 
 use crate::errors::ResolveFailure;
 use crate::Resolver;
 
-use std::io::Read;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, PartialEq, Eq)]
@@ -18,15 +17,13 @@ impl<'a, Env: Environment> Resolver for FileResolver<'a, Env> {
         "file-resolver"
     }
 
-    fn resolve_manifest(&self) -> Result<ConfigFile, ResolveFailure> {
-        let mut manifest_file = self
+    fn resolve_manifest(&self) -> Result<PackageConfig, ResolveFailure> {
+        let manifest_data = self
             .env
-            .load_file(&self.dependency_path.join("knopf.toml"))?;
+            .read_file(&self.dependency_path.join("knopf.toml"))?;
 
-        let mut buffer = Vec::new();
-        manifest_file.read_to_end(&mut buffer)?;
-
-        let manifest = toml::from_slice(&buffer)?;
+        let manifest =
+            PackageConfig::from_file_contents(self.dependency_path.clone().into(), &manifest_data)?;
 
         Ok(manifest)
     }
@@ -55,10 +52,10 @@ impl<'a, Env: Environment> FileResolver<'a, Env> {
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::HashMap, fs::File, path::PathBuf};
+    use std::{collections::HashMap, path::PathBuf};
 
     use environment::MockEnvironment;
-    use manifests::PackageConfig;
+    use manifests::{ConfigFile, KnopfSection, PackageConfig};
     use mockall::predicate;
 
     use super::*;
@@ -85,7 +82,7 @@ mod tests {
         let mut env = MockEnvironment::new();
         env.expect_path_from_base()
             .returning(|_, _| Ok(PathBuf::from("/projects/project-b")));
-        env.expect_load_file()
+        env.expect_read_file()
             .with(predicate::eq("/projects/project-b/knopf.toml".as_ref()))
             .returning(|_| Err(std::io::Error::from(std::io::ErrorKind::NotFound)));
 
@@ -103,19 +100,22 @@ mod tests {
         let mut env = MockEnvironment::new();
         env.expect_path_from_base()
             .returning(|_, _| Ok(PathBuf::from("/projects/project-b")));
-        env.expect_load_file()
-            .returning(|_| File::open("data/simple-manifest.toml"));
+        env.expect_read_file()
+            .returning(|_| Ok(include_bytes!("../../data/simple-manifest.toml").to_vec()));
         let resolver = FileResolver::new(&env, &package_root, "../project-b").unwrap();
 
         assert_eq!(
             resolver.resolve_manifest().unwrap(),
-            ConfigFile {
-                knopf: PackageConfig {
-                    name: "test-project".into(),
-                    version: "0.0.0".into(),
-                    dependencies: HashMap::new(),
+            PackageConfig::from_manifest(
+                "/projects/project-b".into(),
+                ConfigFile {
+                    knopf: KnopfSection {
+                        name: "test-project".into(),
+                        version: "0.0.0".into(),
+                        dependencies: HashMap::new(),
+                    }
                 }
-            }
+            )
         )
     }
 

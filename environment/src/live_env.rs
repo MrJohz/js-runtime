@@ -1,19 +1,19 @@
 use crate::Environment;
 
-#[derive(Debug)]
-pub struct NullEnvironment;
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct LiveEnvironment;
 
-impl Environment for NullEnvironment {
+impl Environment for LiveEnvironment {
     fn path_from_base(
         &self,
         _: &std::path::Path,
         _: &std::path::Path,
     ) -> Result<std::path::PathBuf, std::io::Error> {
-        panic!("The null environment cannot be used");
+        todo!()
     }
 
     fn read_file(&self, _: &std::path::Path) -> Result<Vec<u8>, std::io::Error> {
-        panic!("The null environment cannot be used");
+        todo!()
     }
 
     fn copy_directory(
@@ -21,10 +21,10 @@ impl Environment for NullEnvironment {
         _: &std::path::Path,
         _: &std::path::Path,
     ) -> Result<(), std::io::Error> {
-        panic!("The null environment cannot be used");
+        todo!()
     }
 
     fn canonical(&self, _: &std::path::Path) -> Result<std::path::PathBuf, std::io::Error> {
-        panic!("The null environment cannot be used");
+        todo!()
     }
 }
