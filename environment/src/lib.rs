@@ -1,6 +1,5 @@
 use std::{
     fmt::Debug,
-    fs::File,
     io::Error as IoError,
     path::{Path, PathBuf},
 };
