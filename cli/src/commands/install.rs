@@ -7,10 +7,11 @@ use crate::parsing::Install;
 fn fetch_dependencies(
     env: &impl Environment,
     package: &PackageConfig,
-    accumulator: &mut Vec<&dyn Resolver>,
+    accumulator: &mut Vec<Resolver>,
 ) -> Result<(), String> {
     for dependency in package.dependencies() {
-        let resolver = get_resolver(env, package.location(), dependency).unwrap();
+        let resolver = get_resolver(env, package, dependency).unwrap();
+        accumulator.push(resolver);
     }
 
     Ok(())

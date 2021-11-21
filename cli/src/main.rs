@@ -1,5 +1,5 @@
 use std::{
-    io::Error as IoError,
+    io::{Error as IoError, ErrorKind as IoErrorKind},
     path::{Path, PathBuf},
 };
 
@@ -11,10 +11,11 @@ mod parsing;
 
 fn open_package(env: &impl Environment, path: &Path) -> Result<(PathBuf, Vec<u8>), IoError> {
     let path = if path.file_name() == Some("knopf.toml".as_ref()) {
-        path.join("..")
+        path.parent()
     } else {
-        PathBuf::from(path)
+        Some(path)
     };
+    let path = path.ok_or(IoError::from(IoErrorKind::NotFound))?;
     let path = env.canonical(&path)?;
 
     let file_contents = env.read_file(&path.join("knopf.toml"))?;

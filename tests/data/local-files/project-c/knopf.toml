@@ -1,0 +1,5 @@
+[knopf]
+name = "project-c"
+version = "0.0.0"
+
+[knopf.dependencies]

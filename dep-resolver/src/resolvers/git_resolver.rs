@@ -1,32 +1,31 @@
 use environment::Environment;
 
-use crate::Resolver;
-
 #[derive(Debug, PartialEq, Eq)]
-pub struct GitResolver<'a, Env: Environment> {
-    _env: &'a Env,
-    _url: &'a str,
+pub struct GitResolver {
+    _url: String,
 }
 
-impl<'a, Env: Environment> GitResolver<'a, Env> {
-    pub fn new(env: &'a Env, url: &'a str) -> Self {
-        Self {
-            _env: env,
-            _url: url,
-        }
+impl GitResolver {
+    pub fn new(_env: &impl Environment, url: &str) -> Self {
+        Self { _url: url.into() }
     }
 }
 
-impl<'a, Env: Environment> Resolver for GitResolver<'a, Env> {
-    fn name(&self) -> &str {
+impl GitResolver {
+    pub fn name(&self) -> &str {
         "git-resolver"
     }
 
-    fn resolve_manifest(&self) -> Result<manifests::PackageConfig, crate::errors::ResolveFailure> {
+    pub fn resolve_manifest(
+        &self,
+    ) -> Result<manifests::PackageConfig, crate::errors::ResolveFailure> {
         todo!()
     }
 
-    fn install_package(&self, _: &std::path::Path) -> Result<(), crate::errors::ResolveFailure> {
+    pub fn install_package(
+        &self,
+        _: &std::path::Path,
+    ) -> Result<(), crate::errors::ResolveFailure> {
         todo!()
     }
 }

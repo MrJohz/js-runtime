@@ -2,25 +2,33 @@ use environment::Environment;
 use manifests::PackageConfig;
 
 use crate::errors::ResolveFailure;
-use crate::Resolver;
 
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct FileResolver<'a, Env: Environment> {
-    env: &'a Env,
+pub struct FileResolver {
     dependency_path: PathBuf,
 }
 
-impl<'a, Env: Environment> Resolver for FileResolver<'a, Env> {
-    fn name(&self) -> &str {
+impl FileResolver {
+    pub fn new(
+        env: &impl Environment,
+        package_root: &Path,
+        dependency_path: &str,
+    ) -> Result<Self, ResolveFailure> {
+        Ok(Self {
+            dependency_path: env.path_from_base(package_root, dependency_path.as_ref())?,
+        })
+    }
+    pub fn name(&self) -> &str {
         "file-resolver"
     }
 
-    fn resolve_manifest(&self) -> Result<PackageConfig, ResolveFailure> {
-        let manifest_data = self
-            .env
-            .read_file(&self.dependency_path.join("knopf.toml"))?;
+    pub fn resolve_manifest(
+        &self,
+        env: &impl Environment,
+    ) -> Result<PackageConfig, ResolveFailure> {
+        let manifest_data = env.read_file(&self.dependency_path.join("knopf.toml"))?;
 
         let manifest =
             PackageConfig::from_file_contents(self.dependency_path.clone(), &manifest_data)?;
@@ -28,25 +36,13 @@ impl<'a, Env: Environment> Resolver for FileResolver<'a, Env> {
         Ok(manifest)
     }
 
-    fn install_package(&self, target: &Path) -> Result<(), ResolveFailure> {
-        self.env.copy_directory(&self.dependency_path, target)?;
+    pub fn install_package(
+        &self,
+        env: &impl Environment,
+        target: &Path,
+    ) -> Result<(), ResolveFailure> {
+        env.copy_directory(&self.dependency_path, target)?;
         Ok(())
-    }
-}
-
-impl<'a, Env: Environment> FileResolver<'a, Env> {
-    pub(crate) fn new(
-        env: &'a Env,
-        package_root: &'a Path,
-        dependency_path: &'a str,
-    ) -> Result<Self, ResolveFailure>
-    where
-        Env: Environment,
-    {
-        Ok(Self {
-            env,
-            dependency_path: env.path_from_base(package_root, dependency_path.as_ref())?,
-        })
     }
 }
 
@@ -89,7 +85,7 @@ mod tests {
         let resolver = FileResolver::new(&env, &package_root, "../project-b").unwrap();
 
         assert!(
-            resolver.resolve_manifest().is_err(),
+            resolver.resolve_manifest(&env).is_err(),
             "Should fail to resolve"
         );
     }
@@ -105,7 +101,7 @@ mod tests {
         let resolver = FileResolver::new(&env, &package_root, "../project-b").unwrap();
 
         assert_eq!(
-            resolver.resolve_manifest().unwrap(),
+            resolver.resolve_manifest(&env).unwrap(),
             PackageConfig::from_manifest(
                 "/projects/project-b".into(),
                 ConfigFile {
@@ -135,7 +131,7 @@ mod tests {
 
         assert_eq!(
             resolver
-                .install_package("/lib/package-id".as_ref())
+                .install_package(&env, "/lib/package-id".as_ref())
                 .unwrap(),
             ()
         );

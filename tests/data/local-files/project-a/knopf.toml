@@ -1,0 +1,7 @@
+[knopf]
+name = "project-a"
+version = "0.0.0"
+
+[knopf.dependencies]
+project-b = { path = "../project-b" }
+project-c = { path = "../project-c" }

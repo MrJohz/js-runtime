@@ -1,35 +1,25 @@
-use std::path::Path;
-
 use environment::Environment;
-use manifests::Dependency;
+use manifests::{Dependency, PackageConfig};
 
 mod errors;
 mod resolvers;
 
 pub use resolvers::Resolver;
 
-pub fn get_resolver<'a, Env: Environment>(
-    env: &'a Env,
-    package_root: &'a Path,
-    dep: &'a Dependency,
-) -> Result<Box<dyn resolvers::Resolver + 'a>, errors::ResolveFailure> {
-    match dep {
-        Dependency::FileDependency { path } => Ok(Box::new(resolvers::FileResolver::new(
-            env,
-            package_root,
-            path,
-        )?)),
-        Dependency::GitDependency { git: git_url } => {
-            Ok(Box::new(resolvers::GitResolver::new(env, git_url)))
-        }
-    }
+pub fn get_resolver(
+    env: &impl Environment,
+    package: &PackageConfig,
+    dep: &Dependency,
+) -> Result<Resolver, errors::ResolveFailure> {
+    Resolver::from_dependency(env, package, dep)
 }
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
+    use std::{collections::HashMap, path::PathBuf};
 
     use environment::{MockEnvironment, NullEnvironment};
+    use manifests::{ConfigFile, KnopfSection};
 
     use super::*;
 
@@ -43,7 +33,20 @@ mod tests {
             path: String::from("../other-path"),
         };
 
-        let resolver = get_resolver(&env, &Path::new("."), &dependency);
+        let resolver = get_resolver(
+            &env,
+            &PackageConfig::from_manifest(
+                "".into(),
+                ConfigFile {
+                    knopf: KnopfSection {
+                        name: "package".into(),
+                        version: "0.0.0".into(),
+                        dependencies: HashMap::new(),
+                    },
+                },
+            ),
+            &dependency,
+        );
         assert!(resolver.is_ok(), "resolver was successful");
 
         let resolver = resolver.unwrap();
@@ -56,7 +59,20 @@ mod tests {
             git: String::from("git@github.com:user/package.git"),
         };
 
-        let resolver = get_resolver(&NullEnvironment, &Path::new("."), &dependency);
+        let resolver = get_resolver(
+            &NullEnvironment,
+            &PackageConfig::from_manifest(
+                "".into(),
+                ConfigFile {
+                    knopf: KnopfSection {
+                        name: "package".into(),
+                        version: "0.0.0".into(),
+                        dependencies: HashMap::new(),
+                    },
+                },
+            ),
+            &dependency,
+        );
         assert!(resolver.is_ok(), "resolver was successful");
 
         let resolver = resolver.unwrap();

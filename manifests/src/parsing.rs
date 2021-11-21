@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]
+#[serde(untagged)]
 pub enum Dependency {
     FileDependency { path: String },
     GitDependency { git: String },
