@@ -22,7 +22,7 @@ pub fn get_resolver(
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::HashMap, path::PathBuf};
+    use std::{collections::BTreeMap, path::PathBuf};
 
     use environment::{MockEnvironment, NullEnvironment};
     use manifests::{ConfigFile, KnopfSection};
@@ -47,7 +47,7 @@ mod tests {
                     knopf: KnopfSection {
                         name: "package".into(),
                         version: "0.0.0".into(),
-                        dependencies: HashMap::new(),
+                        dependencies: BTreeMap::new(),
                     },
                 },
             ),
@@ -73,7 +73,7 @@ mod tests {
                     knopf: KnopfSection {
                         name: "package".into(),
                         version: "0.0.0".into(),
-                        dependencies: HashMap::new(),
+                        dependencies: BTreeMap::new(),
                     },
                 },
             ),

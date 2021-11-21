@@ -11,7 +11,7 @@ use crate::errors::ResolveFailure;
 
 use std::path::{Path, PathBuf};
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct FileResolver {
     dependency_path: PathBuf,
 }
@@ -54,7 +54,7 @@ impl FileResolver {
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::HashMap, path::PathBuf};
+    use std::{collections::BTreeMap, path::PathBuf};
 
     use environment::MockEnvironment;
     use manifests::{ConfigFile, KnopfSection, PackageConfig};
@@ -114,7 +114,7 @@ mod tests {
                     knopf: KnopfSection {
                         name: "test-project".into(),
                         version: "0.0.0".into(),
-                        dependencies: HashMap::new(),
+                        dependencies: BTreeMap::new(),
                     }
                 }
             )

@@ -12,13 +12,17 @@ pub use parsing::{ConfigFile, Dependency, KnopfSection};
 mod errors;
 mod parsing;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct PackageConfig {
     manifest: ConfigFile,
     location: PathBuf,
 }
 
 impl PackageConfig {
+    pub fn name(&self) -> &str {
+        &self.manifest.knopf.name
+    }
+
     pub fn location(&self) -> &Path {
         &self.location
     }

@@ -5,4 +5,5 @@ edition = "2021"
 license = "MPL-2.0"
 
 [dependencies]
+dircpy = "0.3.8"
 mockall = "0.10.2"

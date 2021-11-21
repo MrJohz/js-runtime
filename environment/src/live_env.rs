@@ -9,6 +9,8 @@ use std::{
     io::Read,
 };
 
+use dircpy::copy_dir;
+
 use crate::Environment;
 
 #[derive(Debug, PartialEq, Eq, Default)]
@@ -32,10 +34,10 @@ impl Environment for LiveEnvironment {
 
     fn copy_directory(
         &self,
-        _: &std::path::Path,
-        _: &std::path::Path,
+        source: &std::path::Path,
+        dest: &std::path::Path,
     ) -> Result<(), std::io::Error> {
-        todo!("copy_directory")
+        copy_dir(source, dest)
     }
 
     fn canonical(&self, path: &std::path::Path) -> Result<std::path::PathBuf, std::io::Error> {

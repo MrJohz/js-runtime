@@ -6,7 +6,7 @@
 
 use environment::Environment;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct GitResolver {
     _url: String,
 }
@@ -24,12 +24,14 @@ impl GitResolver {
 
     pub fn resolve_manifest(
         &self,
+        _: &impl Environment,
     ) -> Result<manifests::PackageConfig, crate::errors::ResolveFailure> {
         todo!()
     }
 
     pub fn install_package(
         &self,
+        _: &impl Environment,
         _: &std::path::Path,
     ) -> Result<(), crate::errors::ResolveFailure> {
         todo!()

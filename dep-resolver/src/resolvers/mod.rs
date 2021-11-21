@@ -16,7 +16,7 @@ use crate::errors::ResolveFailure;
 
 use self::{file_resolver::FileResolver, git_resolver::GitResolver};
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub enum Resolver {
     FileResolver(FileResolver),
     GitResolver(GitResolver),
@@ -49,16 +49,22 @@ impl Resolver {
 
     pub fn resolve_manifest(
         &self,
-        _env: &impl Environment,
+        env: &impl Environment,
     ) -> Result<PackageConfig, ResolveFailure> {
-        todo!("resolve manifest")
+        match &self {
+            Self::FileResolver(resolver) => resolver.resolve_manifest(env),
+            Self::GitResolver(resolver) => resolver.resolve_manifest(env),
+        }
     }
 
     pub fn install_package(
         &self,
-        _env: &impl Environment,
-        _target: &Path,
+        env: &impl Environment,
+        target: &Path,
     ) -> Result<(), ResolveFailure> {
-        todo!("install package")
+        match &self {
+            Self::FileResolver(resolver) => resolver.install_package(env, target),
+            Self::GitResolver(resolver) => resolver.install_package(env, target),
+        }
     }
 }
