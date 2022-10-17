@@ -6,4 +6,4 @@ license = "MPL-2.0"
 
 [dependencies]
 dircpy = "0.3.8"
-mockall = "0.10.2"
+mockall = "0.11.2"
